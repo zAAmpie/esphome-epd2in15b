@@ -41,11 +41,12 @@ void EPD2in15B::wait_until_idle_() {
   delay(50);
   // BUSY pin: HIGH = busy, LOW = idle
   uint32_t start = millis();
-  while (this->busy_pin_->digital_read()) {
-    if (millis() - start > 20000) {
+  while (this->busy_pin_ != nullptr && this->busy_pin_->digital_read()) {
+    if (millis() - start > 30000) {
       ESP_LOGE(TAG, "Timeout waiting for display idle!");
       return;
     }
+    App.feed_wdt();
     delay(10);
   }
   delay(50);
@@ -197,6 +198,7 @@ void EPD2in15B::update() {
   this->enable();
   for (uint32_t i = 0; i < EPD_BLACK_BUFFER_SIZE; i++) {
     this->write_byte(this->black_buffer_[i]);
+    if (i % 256 == 0) App.feed_wdt();
   }
   this->disable();
 
@@ -206,6 +208,7 @@ void EPD2in15B::update() {
   this->enable();
   for (uint32_t i = 0; i < EPD_RED_BUFFER_SIZE; i++) {
     this->write_byte(~this->red_buffer_[i]);
+    if (i % 256 == 0) App.feed_wdt();
   }
   this->disable();
 
