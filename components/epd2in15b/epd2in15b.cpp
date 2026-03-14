@@ -122,7 +122,7 @@ void EPD2in15B::clear_() {
   }
   this->disable();
 
-  // Send all-white red plane (0x00 stored = 0xFF sent = no red)
+  // Send all-white red plane: 0x00 = no red (matches Waveshare Clear())
   this->send_command_(0x26);
   this->dc_pin_->digital_write(true);
   this->enable();
@@ -203,15 +203,15 @@ void EPD2in15B::draw_absolute_pixel_internal(int x, int y, Color color) {
   // (note: red plane is inverted before sending, so we store uninverted here)
 
   if (color.r > 200 && color.g < 100 && color.b < 100) {
-    // Red pixel: set red plane, clear black plane (white)
+    // Red pixel: set red plane bit, white in black plane
     this->black_buffer_[byte_idx] |= bit_mask;   // white in black plane
-    this->red_buffer_[byte_idx]   |= bit_mask;   // red in red plane
+    this->red_buffer_[byte_idx]   |= bit_mask;   // red in red plane (1=red)
   } else if (color.r < 50 && color.g < 50 && color.b < 50) {
     // Black pixel
     this->black_buffer_[byte_idx] &= ~bit_mask;  // black in black plane
     this->red_buffer_[byte_idx]   &= ~bit_mask;  // not red
   } else {
-    // White pixel (or anything else)
+    // White pixel
     this->black_buffer_[byte_idx] |= bit_mask;   // white in black plane
     this->red_buffer_[byte_idx]   &= ~bit_mask;  // not red
   }
@@ -244,12 +244,13 @@ void EPD2in15B::update() {
   }
   this->disable();
 
-  // Send red plane (0x26): inverted on send (0=red, 1=not red)
+  // Send red plane (0x26): 0x00 = no red, 0xFF = red (NO inversion)
+  // Waveshare Clear() sends 0x00 for white/no-red, so we match that convention
   this->send_command_(0x26);
   this->dc_pin_->digital_write(true);
   this->enable();
   for (uint32_t i = 0; i < EPD_RED_BUFFER_SIZE; i++) {
-    this->write_byte(~this->red_buffer_[i]);
+    this->write_byte(this->red_buffer_[i]);
     if (i % 256 == 0) App.feed_wdt();
   }
   this->disable();
