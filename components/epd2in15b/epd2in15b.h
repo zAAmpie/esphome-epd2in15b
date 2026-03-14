@@ -25,6 +25,7 @@ class EPD2in15B : public display::DisplayBuffer,
   void set_dc_pin(GPIOPin *dc)     { dc_pin_ = dc; }
   void set_reset_pin(GPIOPin *rst) { reset_pin_ = rst; }
   void set_busy_pin(GPIOPin *busy) { busy_pin_ = busy; }
+  void set_pwr_pin(GPIOPin *pwr)   { pwr_pin_ = pwr; }
 
   void setup() override;
   void dump_config() override;
@@ -45,6 +46,7 @@ class EPD2in15B : public display::DisplayBuffer,
   GPIOPin *dc_pin_{nullptr};
   GPIOPin *reset_pin_{nullptr};
   GPIOPin *busy_pin_{nullptr};
+  GPIOPin *pwr_pin_{nullptr};
 
   void draw_absolute_pixel_internal(int x, int y, Color color) override;
   size_t get_buffer_length_() { return EPD_BLACK_BUFFER_SIZE + EPD_RED_BUFFER_SIZE; }

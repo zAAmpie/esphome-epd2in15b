@@ -124,6 +124,13 @@ void EPD2in15B::setup() {
   this->dc_pin_->setup();
   this->dc_pin_->digital_write(false);
 
+  // Power on display first — must happen before SPI init
+  if (this->pwr_pin_ != nullptr) {
+    this->pwr_pin_->setup();
+    this->pwr_pin_->digital_write(true);
+    delay(100);  // Allow display to stabilise after power on
+  }
+
   if (this->reset_pin_ != nullptr) {
     this->reset_pin_->setup();
     this->reset_pin_->digital_write(true);

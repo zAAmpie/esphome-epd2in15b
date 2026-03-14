@@ -10,6 +10,8 @@ from esphome.const import (
     CONF_BUSY_PIN,
 )
 
+CONF_PWR_PIN = "pwr_pin"
+
 DEPENDENCIES = ["spi"]
 AUTO_LOAD = ["display"]
 
@@ -31,6 +33,7 @@ CONFIG_SCHEMA = cv.All(
             cv.Required(CONF_DC_PIN): pins.gpio_output_pin_schema,
             cv.Optional(CONF_RESET_PIN): pins.gpio_output_pin_schema,
             cv.Optional(CONF_BUSY_PIN): pins.gpio_input_pin_schema,
+            cv.Optional(CONF_PWR_PIN): pins.gpio_output_pin_schema,
         }
     )
     .extend(cv.COMPONENT_SCHEMA)
@@ -53,6 +56,10 @@ async def to_code(config):
     if CONF_BUSY_PIN in config:
         busy_pin = await cg.gpio_pin_expression(config[CONF_BUSY_PIN])
         cg.add(var.set_busy_pin(busy_pin))
+
+    if CONF_PWR_PIN in config:
+        pwr_pin = await cg.gpio_pin_expression(config[CONF_PWR_PIN])
+        cg.add(var.set_pwr_pin(pwr_pin))
 
     if CONF_LAMBDA in config:
         lambda_ = await cg.process_lambda(
