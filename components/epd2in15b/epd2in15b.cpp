@@ -77,8 +77,6 @@ void EPD2in15B::set_cursor_(uint16_t x, uint16_t y) {
 
 void EPD2in15B::turn_on_display_() {
   ESP_LOGD(TAG, "Triggering display refresh (0x20)...");
-  this->send_command_(0x21);  // Display Update Control 2
-  this->send_data_(0xF7);     // Enable clock, analog, load LUT, display, disable
   this->send_command_(0x20);  // MASTER_ACTIVATION
   this->wait_until_idle_();
   ESP_LOGD(TAG, "Display refresh complete.");
@@ -104,11 +102,13 @@ void EPD2in15B::initialize_() {
   this->send_command_(0x18);  // Read built-in temperature sensor
   this->send_data_(0x80);
 
+  // RAM content option for display update — enable both black and red RAM
+  this->send_command_(0x21);
+  this->send_data_(0x00);
+  this->send_data_(0x80);
+
   this->set_cursor_(0, 0);
   this->wait_until_idle_();
-
-  // Clear display to white after init (matches Waveshare demo sequence)
-  this->clear_();
 }
 
 void EPD2in15B::clear_() {
@@ -221,6 +221,7 @@ void EPD2in15B::draw_absolute_pixel_internal(int x, int y, Color color) {
 
 void EPD2in15B::update() {
   ESP_LOGD(TAG, "update() called, running lambda...");
+
   // Reset buffers to white before running lambda
   memset(this->black_buffer_, 0xFF, EPD_BLACK_BUFFER_SIZE);  // all white
   memset(this->red_buffer_,   0x00, EPD_RED_BUFFER_SIZE);    // no red
