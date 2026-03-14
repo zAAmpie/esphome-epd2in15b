@@ -1,6 +1,8 @@
 #include "epd2in15b.h"
 #include "esphome/core/log.h"
 #include "esphome/core/application.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 namespace esphome {
 namespace epd2in15b {
@@ -38,8 +40,7 @@ void EPD2in15B::reset_() {
 
 void EPD2in15B::wait_until_idle_() {
   ESP_LOGD(TAG, "Waiting for display idle...");
-  delay(50);
-  // BUSY pin: HIGH = busy, LOW = idle
+  vTaskDelay(50 / portTICK_PERIOD_MS);
   uint32_t start = millis();
   while (this->busy_pin_ != nullptr && this->busy_pin_->digital_read()) {
     if (millis() - start > 30000) {
@@ -47,9 +48,9 @@ void EPD2in15B::wait_until_idle_() {
       return;
     }
     App.feed_wdt();
-    delay(10);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
-  delay(50);
+  vTaskDelay(50 / portTICK_PERIOD_MS);
   ESP_LOGD(TAG, "Display idle.");
 }
 
@@ -75,8 +76,10 @@ void EPD2in15B::set_cursor_(uint16_t x, uint16_t y) {
 }
 
 void EPD2in15B::turn_on_display_() {
+  ESP_LOGD(TAG, "Triggering display refresh (0x20)...");
   this->send_command_(0x20);  // MASTER_ACTIVATION
   this->wait_until_idle_();
+  ESP_LOGD(TAG, "Display refresh complete.");
 }
 
 // ── Initialisation ────────────────────────────────────────────────────────────
@@ -198,6 +201,9 @@ void EPD2in15B::update() {
   ESP_LOGD(TAG, "black[0]=0x%02X red[0]=0x%02X", this->black_buffer_[0], this->red_buffer_[0]);
 
   ESP_LOGD(TAG, "Sending black plane...");
+  // Reset cursor to top-left before sending frame data
+  this->set_cursor_(0, 0);
+
   // Send black plane (0x24): 0=black, 1=white
   this->send_command_(0x24);
   this->dc_pin_->digital_write(true);
