@@ -8,7 +8,6 @@ from esphome.const import (
     CONF_LAMBDA,
     CONF_RESET_PIN,
     CONF_BUSY_PIN,
-    CONF_CS_PIN,
 )
 
 DEPENDENCIES = ["spi"]
@@ -30,13 +29,12 @@ CONFIG_SCHEMA = cv.All(
         {
             cv.GenerateID(): cv.declare_id(EPD2in15B),
             cv.Required(CONF_DC_PIN): pins.gpio_output_pin_schema,
-            cv.Required(CONF_CS_PIN): pins.gpio_output_pin_schema,
             cv.Optional(CONF_RESET_PIN): pins.gpio_output_pin_schema,
             cv.Optional(CONF_BUSY_PIN): pins.gpio_input_pin_schema,
         }
     )
     .extend(cv.COMPONENT_SCHEMA)
-    .extend(spi.spi_device_schema(cs_pin_required=False))
+    .extend(spi.spi_device_schema(cs_pin_required=True))
 )
 
 
@@ -47,9 +45,6 @@ async def to_code(config):
 
     dc_pin = await cg.gpio_pin_expression(config[CONF_DC_PIN])
     cg.add(var.set_dc_pin(dc_pin))
-
-    cs_pin = await cg.gpio_pin_expression(config[CONF_CS_PIN])
-    cg.add(var.set_cs_pin(cs_pin))
 
     if CONF_RESET_PIN in config:
         reset_pin = await cg.gpio_pin_expression(config[CONF_RESET_PIN])

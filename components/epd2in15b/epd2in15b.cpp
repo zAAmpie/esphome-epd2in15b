@@ -178,7 +178,7 @@ void EPD2in15B::update() {
 
   uint16_t width_bytes = EPD_WIDTH / 8;  // 20
 
-  // Send black plane (0x24): 0=black, 1=white — stored correctly
+  // Send black plane (0x24): 0=black, 1=white
   this->send_command_(0x24);
   this->dc_pin_->digital_write(true);
   this->enable();
@@ -187,8 +187,7 @@ void EPD2in15B::update() {
   }
   this->disable();
 
-  // Send red plane (0x26): Waveshare sends ~red, meaning 0=red, 1=not red
-  // Our red_buffer stores 1=red, so we invert on send
+  // Send red plane (0x26): inverted on send (0=red, 1=not red)
   this->send_command_(0x26);
   this->dc_pin_->digital_write(true);
   this->enable();
