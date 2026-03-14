@@ -27,7 +27,7 @@ class EPD2in15B : public display::DisplayBuffer,
                   public spi::SPIDevice<spi::BIT_ORDER_MSB_FIRST,
                                         spi::CLOCK_POLARITY_LOW,
                                         spi::CLOCK_PHASE_LEADING,
-                                        spi::DATA_RATE_2MHZ> {
+                                        spi::DATA_RATE_8MHZ> {
  public:
   void set_dc_pin(GPIOPin *dc)     { dc_pin_ = dc; }
   void set_reset_pin(GPIOPin *rst) { reset_pin_ = rst; }
