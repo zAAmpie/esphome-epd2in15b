@@ -19,7 +19,6 @@ EPD2in15B = epd2in15b_ns.class_(
     "EPD2in15B",
     display.DisplayBuffer,
     spi.SPIDevice,
-    cg.PollingComponent,
 )
 
 # Top-level component schema — referenced as:
@@ -43,7 +42,6 @@ CONFIG_SCHEMA = cv.All(
 
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
-    await cg.register_component(var, config)
     await display.register_display(var, config)
     await spi.register_spi_device(var, config)
 
