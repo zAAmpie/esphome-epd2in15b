@@ -105,6 +105,21 @@ void EPD2in15B::initialize_() {
 // ── ESPHome lifecycle ─────────────────────────────────────────────────────────
 
 void EPD2in15B::setup() {
+  // Allocate the display buffer first — must happen before any rendering
+  // Use a single allocation split into two planes
+  this->init_internal_(EPD_BLACK_BUFFER_SIZE + EPD_RED_BUFFER_SIZE);
+  if (this->buffer_ == nullptr) {
+    ESP_LOGE(TAG, "Failed to allocate display buffer!");
+    this->mark_failed();
+    return;
+  }
+  this->black_buffer_ = this->buffer_;
+  this->red_buffer_   = this->buffer_ + EPD_BLACK_BUFFER_SIZE;
+
+  // White background on both planes
+  memset(this->black_buffer_, 0xFF, EPD_BLACK_BUFFER_SIZE);
+  memset(this->red_buffer_,   0x00, EPD_RED_BUFFER_SIZE);
+
   // Set up pins
   this->dc_pin_->setup();
   this->dc_pin_->digital_write(false);
@@ -119,17 +134,6 @@ void EPD2in15B::setup() {
   }
 
   this->spi_setup();
-
-  // Allocate two framebuffers within the single buffer_
-  // init_internal_ allocates buffer_ of size get_buffer_length_()
-  this->init_internal_(this->get_buffer_length_());
-  this->black_buffer_ = this->buffer_;
-  this->red_buffer_   = this->buffer_ + EPD_BLACK_BUFFER_SIZE;
-
-  // Start with both planes white
-  memset(this->black_buffer_, 0xFF, EPD_BLACK_BUFFER_SIZE);
-  memset(this->red_buffer_,   0x00, EPD_RED_BUFFER_SIZE);
-
   this->initialize_();
 }
 
@@ -144,6 +148,8 @@ void EPD2in15B::dump_config() {
 // ── Pixel drawing ─────────────────────────────────────────────────────────────
 
 void EPD2in15B::draw_absolute_pixel_internal(int x, int y, Color color) {
+  if (this->black_buffer_ == nullptr || this->red_buffer_ == nullptr)
+    return;
   if (x < 0 || x >= EPD_WIDTH || y < 0 || y >= EPD_HEIGHT)
     return;
 
